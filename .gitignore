@@ -1,0 +1,11 @@
+Release/
+Debug/
+*.opensdf
+*.sdf
+*.VC.opendb
+*.VC.db
+.suo
+MacePU/ipch/*
+
+
+*.rar
