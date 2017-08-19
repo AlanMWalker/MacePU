@@ -54,7 +54,7 @@ struct cpuinfo //ip = reg7
 
 void loadInstructionIntoMemory(uint8_t opcode, int32_t num, ...);
 
-int main(void)
+int main(int argc, char* argv[])
 {
 	bool isCPURunning = true;
 
@@ -104,7 +104,8 @@ int main(void)
 		CPU.regs[7] += 16; //inc instruc ptr
 	}
 
-	system("pause"); // wait for key press before close
+	printf("Hit return to close...\n");
+	scanf_s("");
 	return 0;
 }
 
