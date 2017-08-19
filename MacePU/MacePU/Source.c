@@ -22,14 +22,14 @@ P.S Check the Git readme for links I used for research.
 #include <string.h>
 #include <stdarg.h>	
 
+#include "include\OperationCodes.h"
+
 #define REG_TOTAL 8
-#define OP_LOAD 0x01 
-#define OP_STORE 0x02 
-#define OP_ADD 0x03 // Dest, A1, A2
 #define OP_SHIFT 24
 #define OP_MASK 0xFF000000
 #define MAX_ARGS 3
 #define IP 7
+
 // Basic CPU simulation featuring assembler for the project
 // 8 * 8bit CPU registers  
 // R7 is Program counter 
@@ -42,6 +42,7 @@ P.S Check the Git readme for links I used for research.
 // - Create an assembler project
 // - Create a stack 
 // - Define more instructions for inst set 
+
 static uint8_t Memory[16384]; // RAM 
 static uint8_t* pinstructionLoaded = NULL;
 
@@ -57,16 +58,12 @@ int main(void)
 {
 	bool isCPURunning = true;
 
-	memset(Memory, 0, 8 * 2048);
+	memset(Memory, 0, 8 * 2048); // clear memory 
 	// Load instruc into memory
 
-	//Memory[0] = OP_LOAD;
-	//Memory[1] = 0x12;
-	//Memory[2] = 0x12;
-
-	loadInstructionIntoMemory(OP_LOAD, 2, 0, 0x18);
-	loadInstructionIntoMemory(OP_LOAD, 2, 1, 0x18);
-	loadInstructionIntoMemory(OP_ADD, 3, 0, 1, 0);
+	loadInstructionIntoMemory(OP_LOAD, 2, 0, 0x18); // load into r0 0x18
+	loadInstructionIntoMemory(OP_LOAD, 2, 1, 0x18); // load into r1 0x18
+	loadInstructionIntoMemory(OP_ADD, 3, 0, 1, 0); // add r0 and r1 and store in r0 
 
 	while (isCPURunning)
 	{
