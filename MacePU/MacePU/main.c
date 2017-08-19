@@ -17,16 +17,14 @@ P.S Check the Git readme for links I used for research.
 */
 
 #include <stdio.h>
-#include <stdint.h>	
 #include <stdbool.h>
 #include <string.h>
 #include <stdarg.h>	
 
 #include "include\OperationCodes.h"
+#include "include\DataTypes.h"
 
 #define REG_TOTAL 8
-#define OP_SHIFT 24
-#define OP_MASK 0xFF000000
 #define MAX_ARGS 3
 #define IP 7
 
@@ -43,19 +41,21 @@ P.S Check the Git readme for links I used for research.
 // - Create a stack 
 // - Define more instructions for inst set 
 
-static uint8_t Memory[16384]; // RAM 
-static uint8_t* pinstructionLoaded = NULL;
+static uint8 Memory[16384]; // RAM 
+static uint8* pinstructionLoaded = NULL;
 
-struct cpuinfo //ip = reg7
+typedef struct _cpuinfo //ip = reg7
 {
-	uint32_t regs[8]; // 8 int regs
-	uint32_t currentInstructionOpcode;
+	uint8 regs[8]; // 8 int regs
+	uint24 instrOpCode;
 } CPU;
 
-void loadInstructionIntoMemory(uint8_t opcode, int32_t num, ...);
+void loadInstructionIntoMemory(uint8 opcode, int32 num, ...);
 
 int main(int argc, char* argv[])
 {
+	CPU processor;
+
 	bool isCPURunning = true;
 
 	memset(Memory, 0, 8 * 2048); // clear memory 
@@ -67,15 +67,15 @@ int main(int argc, char* argv[])
 
 	while (isCPURunning)
 	{
-		CPU.currentInstructionOpcode = *(uint32_t*)(Memory + CPU.regs[7]);
-		switch (CPU.currentInstructionOpcode & (OP_MASK >> OP_SHIFT))
+		processor.instrOpCode.val = *(uint32*)(Memory + processor.regs[7]);
+		switch (processor.instrOpCode.val & (INSTRUCTION_MASK >> INSTRUCTION_SHIFT))
 		{
 		case OP_LOAD:
 		{
-			const int8_t registerIndex = (uint32_t)*((Memory + CPU.regs[7]) + 1);
-			const int8_t loadValue = (uint32_t)*((Memory + CPU.regs[7]) + 2);
+			const int8 registerIndex = (uint32)*((Memory + processor.regs[7]) + 1);
+			const int8 loadValue = (uint32)*((Memory + processor.regs[7]) + 2);
 
-			CPU.regs[registerIndex] = loadValue;
+			processor.regs[registerIndex] = loadValue;
 			break;
 		}
 		case OP_STORE:
@@ -84,32 +84,33 @@ int main(int argc, char* argv[])
 
 		case OP_ADD:
 		{
-			const uint32_t dest = (uint32_t)*((Memory + CPU.regs[7]) + 1);
-			const uint32_t r1 = (uint32_t)*((Memory + CPU.regs[7]) + 2);
-			const uint32_t r2 = (uint32_t)*((Memory + CPU.regs[7]) + 3);
-			CPU.regs[dest] = CPU.regs[r1] + CPU.regs[r2];
+			const uint32 dest = (uint32)*((Memory + processor.regs[7]) + 1);
+			const uint32 r1 = (uint32)*((Memory + processor.regs[7]) + 2);
+			const uint32 r2 = (uint32)*((Memory + processor.regs[7]) + 3);
+			processor.regs[dest] = processor.regs[r1] + processor.regs[r2];
 
 			break;
 		}
 		default: isCPURunning = false; break;
 		}
 		//Debug purposes
-		int32_t i = 0;
+		int32 i = 0;
 		for (i; i < REG_TOTAL; ++i)
 		{
-			printf("Reg Value %d = %d\n", i, CPU.regs[i]);
+			printf("Reg Value %d = %d\n", i, processor.regs[i]);
 		}
 		printf("\n\n");
 
-		CPU.regs[7] += 16; //inc instruc ptr
+		processor.regs[7] += 16; //inc instruc ptr
 	}
 
 	printf("Hit return to close...\n");
 	scanf_s("");
+
 	return 0;
 }
 
-void loadInstructionIntoMemory(uint8_t opcode, int32_t num, ...)
+void loadInstructionIntoMemory(uint8 opcode, int32 num, ...)
 {
 	if (num > MAX_ARGS)
 	{
@@ -125,12 +126,14 @@ void loadInstructionIntoMemory(uint8_t opcode, int32_t num, ...)
 
 	va_start(argsList, num);
 	pinstructionLoaded[0] = opcode;
-	int32_t i;
+	int32 i;
 
 	for (i = 0; i < num; ++i)
 	{
-		pinstructionLoaded[i + 1] = va_arg(argsList, int8_t);
+		pinstructionLoaded[i + 1] = va_arg(argsList, int8);
 	}
+
 	pinstructionLoaded += 16;
 	va_end(argsList);
+
 }

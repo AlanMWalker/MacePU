@@ -32,3 +32,4 @@ Thanks
 - http://emulator101.com/
 - https://fms.komkon.org/EMUL8/HOWTO.html
 - https://www.experts-exchange.com/questions/21280335/CPU-Simulator-in-C.html
+- https://schweigi.github.io/assembler-simulator/instruction-set.html

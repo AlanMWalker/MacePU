@@ -1,9 +1,9 @@
 #include <stdio.h>	
-#include <stdlib.h>
-#include <stdint.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "..\MacePU\include\OperationCodes.h"
+#include "..\MacePU\include\DataTypes.h"
 
 #define MASM_FILE_EXT ".masm"
 
@@ -20,11 +20,23 @@ void handleError(const char* failedString)
 	pauseForReturnKey();
 }
 
-void convertLineToInstruction(char* instructionLine); 
+void convertLineToInstruction(char* instructionLine);
 
 int main(int argc, char* argv[])
 {
 	char instrLine[256];
+
+	uint24 i;
+	i.val = OP_STORE;
+
+	i.val = i.val << INSTRUCTION_SHIFT;
+
+	i.val |= (1 << ARG0_SHIFT);
+	i.val |= (2 << ARG1_SHIFT);
+
+	//OP_MASK >> OP_SHIFT
+
+	int8 opcode = (i.val & INSTRUCTION_MASK) >> INSTRUCTION_SHIFT;
 
 	if (argc < 2)
 	{
@@ -33,7 +45,7 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	int32_t argsIndex;
+	int32 argsIndex;
 
 	for (argsIndex = 0; argsIndex < argc; ++argsIndex)
 	{
@@ -44,8 +56,8 @@ int main(int argc, char* argv[])
 	}
 
 	FILE* pFile = NULL;
-	int32_t result = fopen_s(&pFile, argv[argsIndex], "r");
-	
+	int32 result = fopen_s(&pFile, argv[argsIndex], "r");
+
 	if (result != 0)
 	{
 		handleError("Assembly file not found!");
@@ -69,5 +81,13 @@ int main(int argc, char* argv[])
 
 void convertLineToInstruction(char * instructionLine)
 {
-	const int32_t StringLength = strlen(instructionLine);
+	if (instructionLine == NULL)
+	{
+		return;
+	}
+
+	const int32 StringLength = strlen(instructionLine);
+	int16 generatedInstruction = 0;
+
+
 }

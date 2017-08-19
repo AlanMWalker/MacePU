@@ -22,6 +22,7 @@
     <ClCompile Include="main.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\DataTypes.h" />
     <ClInclude Include="include\OperationCodes.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
