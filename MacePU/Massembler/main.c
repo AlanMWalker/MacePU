@@ -15,6 +15,7 @@
 
 #define MASM_FILE_EXT ".masm" // assembly file text format 
 #define CPU_BINARY_FORMAT ".msm"  // assembly binary executable format
+#define MEMSET_RESET -52
 
 void pauseForReturnKey()
 {
@@ -32,6 +33,8 @@ void handleError(const int8* failedString)
 void convertLineToInstruction(const int8* instructionLine, bool isLastInstruction);
 
 int8 convertStringToOpcode(const int8* inBuffer);
+
+bool isArgRegister(const int8* inBuffer);
 
 int main(int argc, int8* argv[])
 {
@@ -85,7 +88,7 @@ int main(int argc, int8* argv[])
 		{
 			convertLineToInstruction(instrLine, true);
 		}
-		memset(instrLine, 0, strlen(instrLine));
+		memset(instrLine, MEMSET_RESET, strlen(instrLine));
 	}
 
 	if (pFile != NULL)
@@ -108,10 +111,10 @@ void convertLineToInstruction(const int8 * instructionLine, bool isLastInstructi
 	}
 
 	static FILE* pBinaryExecutable = NULL;
+	static int8 buffer[100];
 	const int32 StringLength = strlen(instructionLine);
 	int16 generatedInstruction = 0;
 	int8* commaPos = NULL;
-	int8 buffer[100];
 	int32 index;
 
 	if (pBinaryExecutable == NULL)
@@ -126,7 +129,6 @@ void convertLineToInstruction(const int8 * instructionLine, bool isLastInstructi
 		pauseForReturnKey();
 	}
 
-
 	commaPos = strchr(instructionLine, ','); // check if there's more than 1 arg
 
 	if (commaPos != NULL) // if there's more than 1 argument
@@ -136,11 +138,48 @@ void convertLineToInstruction(const int8 * instructionLine, bool isLastInstructi
 			if (instructionLine[index] == ' ')
 			{
 				buffer[index] = '\0';
+				++index;  // ignore space between args
 				break;
 			}
 			buffer[index] = instructionLine[index];
 		}
+
+		memset(buffer, MEMSET_RESET, strlen(buffer)); // clear buffer
+
 		int32 opcode = convertStringToOpcode(buffer);
+
+		//TODO insert opcode arg validity check here!
+
+		if (opcode == -1)
+		{
+			handleError("Failed to find opcode!");
+			pauseForReturnKey();
+			return;
+		}
+
+		//extract arg from instruction line string
+		int32 indexBuff = 0;
+		for (index; index < (signed)strlen(instructionLine); ++index)
+		{
+			if (instructionLine[index] == *commaPos)
+			{
+				buffer[indexBuff] = '\0';
+				break;
+			}
+			buffer[indexBuff] = instructionLine[index];
+			++indexBuff;
+		}
+		int8 argValue1;
+		if (isArgRegister(buffer)) // if the instruction is an argument 
+		{
+			argValue1 = buffer[1];
+		}
+		else
+		{
+			handleError("Incorrect load instruction! Can only load into registers!");
+			pauseForReturnKey();
+		}
+		memset(buffer, MEMSET_RESET, strlen(buffer));
 	}
 	else // if there's not
 	{
@@ -165,10 +204,25 @@ int8 convertStringToOpcode(const int8 * inBuffer)
 	{
 		buffer[i] = (int8)towlower(i);
 	}
-	if (1)
+
+	if (strcmp(buffer, "load"))
 	{
-
+		return OP_LOAD;
 	}
-
+	else if (strcmp(buffer, "store"))
+	{
+		return OP_STORE;
+	}
+	else if (strcmp(buffer, "add"))
+	{
+		return OP_ADD;
+	}
 	return -1;
+}
+
+bool isArgRegister(const int8 * inBuffer)
+{
+	int8* ptr = strchr(inBuffer, 'r');
+
+	return ptr != NULL;
 }
