@@ -17,6 +17,8 @@
 #define ARG0_MASK 0x00FF00
 #define ARG1_MASK 0x0000FF
 
+#define MAX_ARG_COUNT 2
+
 typedef struct _uint24
 {
 	unsigned int val : 24;
