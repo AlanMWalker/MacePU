@@ -24,8 +24,8 @@ P.S Check the Git readme for links I used for research.
 
 #include <vld.h> // visual leak detector
 
-#include "include\OperationCodes.h"
-#include "include\DataTypes.h"
+#include "include\cpudefs\OperationCodes.h"
+#include "include\cpudefs\DataTypes.h"
 
 #define REG_TOTAL 8
 #define MAX_ARGS 3

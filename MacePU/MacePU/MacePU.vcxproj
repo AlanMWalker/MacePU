@@ -22,8 +22,8 @@
     <ClCompile Include="main.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\DataTypes.h" />
-    <ClInclude Include="include\OperationCodes.h" />
+    <ClInclude Include="include\cpudefs\DataTypes.h" />
+    <ClInclude Include="include\cpudefs\OperationCodes.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{52BDAAB3-92CA-4E82-9C95-D046A583DBE7}</ProjectGuid>
@@ -112,6 +112,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

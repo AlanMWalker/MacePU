@@ -19,13 +19,5 @@
 
 #define MAX_ARG_COUNT 2
 
-typedef struct _uint24
-{
-	unsigned int val : 24;
-} uint24;
 
-typedef struct _int24
-{
-	signed int val : 24;
-} int24;
 #endif // !OPERATION_CODES_H

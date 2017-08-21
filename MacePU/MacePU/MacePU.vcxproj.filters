@@ -15,10 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\OperationCodes.h">
+    <ClInclude Include="include\cpudefs\DataTypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\DataTypes.h">
+    <ClInclude Include="include\cpudefs\OperationCodes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
