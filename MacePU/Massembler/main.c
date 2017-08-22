@@ -49,11 +49,41 @@ int main(int argc, int8* argv[])
 	{
 	case UnableToCreateFile:
 		handleError("Unable to create the msm binary file!");
-		break; 
+		break;
 	default:
 		break;
 	}
 
+#ifdef _DEBUG
+
+	FILE* file = NULL;
+	errno_t result = fopen_s(&file, "assembled.msm", "rb");
+
+	if (result != 0)
+	{
+		handleError("--DEBUG ERROR -- Failed to open binary assembled file");
+		pauseForReturnKey();
+		return -1;
+	}
+	unsigned char tempBuff[4];
+
+	fread_s(tempBuff, 20, 3, 1, file);
+
+	printf("Opcode = %d, Arg0 = %d, Arg1 = %d\n", tempBuff[3], tempBuff[2], tempBuff[1]);
+	int32 val = 0;
+
+	val |= (tempBuff[2] << INSTRUCTION_SHIFT);
+	val |= (tempBuff[1] << ARG0_SHIFT);
+	val |= (tempBuff[0] << ARG1_SHIFT);
+	
+	printf("%d\n", val);
+
+	if (file != NULL)
+	{
+		fclose(file);
+		file = NULL;
+	}
+#endif 
 	pauseForReturnKey();
 
 	return 0;

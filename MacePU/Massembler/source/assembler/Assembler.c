@@ -41,6 +41,7 @@ AssemblerReturnCode assembleFile(const char * masmFileLoc)
 	if (pFile != NULL)
 	{
 		fclose(pFile);
+		pFile = NULL;
 	}
 
 	return Success;
@@ -116,7 +117,7 @@ void convertLineToInstruction(const int8 * instructionLine, bool isLastInstructi
 		int8 arg0, arg1;
 		if (isArgRegister(buffer)) // if the instruction is an argument 
 		{
-			arg0 = buffer[1];
+			arg0 = atoi(&buffer[1]);
 		}
 		else
 		{
@@ -152,7 +153,6 @@ void convertLineToInstruction(const int8 * instructionLine, bool isLastInstructi
 		}
 		int24 instruc = createInstructionInteger(opcode, 2, arg0, arg1);
 		fwrite((void*)&instruc, 3, 1, pBinaryExecutable);
-
 	}
 	else // if there's not
 	{
@@ -162,6 +162,7 @@ void convertLineToInstruction(const int8 * instructionLine, bool isLastInstructi
 	if (pBinaryExecutable && isLastInstruction)
 	{
 		fclose(pBinaryExecutable);
+		pBinaryExecutable = NULL;
 	}
 }
 
@@ -217,8 +218,7 @@ int24 createInstructionInteger(uint8 opCode, int32 argCount, ...)
 	case 1:
 	{
 		const int8 arg = va_arg(list, int8);
-		instructionInt.val |= arg;
-		instructionInt.val = instructionInt.val << ARG0_SHIFT;
+		instructionInt.val |= (arg << ARG0_SHIFT);
 		break;
 	}
 	case 2:
@@ -226,9 +226,8 @@ int24 createInstructionInteger(uint8 opCode, int32 argCount, ...)
 		const int8 arg0 = va_arg(list, int8);
 		const int8 arg1 = va_arg(list, int8);
 
-		instructionInt.val |= va_arg(list, int8);
-		instructionInt.val = instructionInt.val << ARG0_SHIFT;
-
+		instructionInt.val |= (arg0 << ARG0_SHIFT);
+		instructionInt.val |= (arg1 << ARG1_SHIFT);
 		break;
 	}
 	default:
