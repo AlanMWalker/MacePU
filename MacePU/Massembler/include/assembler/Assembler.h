@@ -9,6 +9,20 @@
 
 #define MEMSET_RESET -52
 
+#define FILE_HEADER "S-MSM"
+#define FILE_FOOTER "E-MSM"
+
+#ifdef _DEBUG
+#define DEBUG_ASSEMBLED 1 // Set 1 if need to debug assembled file
+#endif
+
+/*
+File structure -
+5 bytes header - "S-MSM" (inc null terminator)
+Instruction Codes until EOF marker
+5 bytes footer - "B-MSM" (inc null terminator)
+*/
+
 typedef enum _AssemblerReturnCode
 {
 	Success = 0,

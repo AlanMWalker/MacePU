@@ -40,7 +40,6 @@ int main(int argc, int8* argv[])
 	if (!extensionFound)
 	{
 		handleError("Incorrect file extension for Massembler!");
-		pauseForReturnKey();
 		return -1;
 	}
 
@@ -54,7 +53,7 @@ int main(int argc, int8* argv[])
 		break;
 	}
 
-#ifdef _DEBUG
+#if DEBUG_ASSEMBLED
 
 	FILE* file = NULL;
 	errno_t result = fopen_s(&file, "assembled.msm", "rb");
@@ -62,20 +61,31 @@ int main(int argc, int8* argv[])
 	if (result != 0)
 	{
 		handleError("--DEBUG ERROR -- Failed to open binary assembled file");
-		pauseForReturnKey();
 		return -1;
 	}
-	unsigned char tempBuff[4];
+
+	uint8 tempBuff[50];
+
+	// Read Header
+	const uint64 readBytes = fread_s(tempBuff, _countof(tempBuff), sizeof(int8), strlen(FILE_HEADER) + 1, file);
+
+	if (strcmp(tempBuff, FILE_HEADER) != 0)
+	{
+		handleError("--DEBUG ERROR -- Incorrect file header when debug");
+		return -1;
+	}
+
+	memset(tempBuff, MEMSET_RESET, readBytes);
 
 	fread_s(tempBuff, 20, 3, 1, file);
 
-	printf("Opcode = %d, Arg0 = %d, Arg1 = %d\n", tempBuff[3], tempBuff[2], tempBuff[1]);
+	printf("Opcode = %d, Arg0 = %d, Arg1 = %d\n", tempBuff[2], tempBuff[1], tempBuff[0]);
 	int32 val = 0;
 
 	val |= (tempBuff[2] << INSTRUCTION_SHIFT);
 	val |= (tempBuff[1] << ARG0_SHIFT);
-	val |= (tempBuff[0] << ARG1_SHIFT);
-	
+	val |= tempBuff[0];
+
 	printf("%d\n", val);
 
 	if (file != NULL)

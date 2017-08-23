@@ -8,6 +8,8 @@
 
 #include "assembler\Assembler.h"
 
+static const char REGISTER_PREFIX = 'r';
+
 static FILE* pFile = NULL;
 static FILE* pBinaryExecutable = NULL;
 
@@ -22,6 +24,26 @@ AssemblerReturnCode assembleFile(const char * masmFileLoc)
 	{
 		handleError("Assembly file not found!");
 	}
+
+	if (pBinaryExecutable == NULL)
+	{
+		fopen_s(&pBinaryExecutable, "assembled.msm", "wb+");
+	}
+
+	assert(pBinaryExecutable != NULL);
+
+	if (pBinaryExecutable == NULL)
+	{
+		handleError("Failed to create binary format!");
+		pauseForReturnKey();
+		return UnableToCreateFile;
+	}
+
+	// Write binary header to the assembled file
+	int8 fileHeaderBuffer[_countof(FILE_HEADER)];
+	memcpy_s(fileHeaderBuffer, _countof(FILE_HEADER), FILE_HEADER, strlen(FILE_HEADER) + 1);
+
+	fwrite(fileHeaderBuffer, sizeof(int8), _countof(fileHeaderBuffer), pBinaryExecutable);
 
 	while (!feof(pFile))
 	{
@@ -44,6 +66,14 @@ AssemblerReturnCode assembleFile(const char * masmFileLoc)
 		pFile = NULL;
 	}
 
+	if (pBinaryExecutable != NULL)
+	{
+		memcpy_s(fileHeaderBuffer, _countof(FILE_FOOTER), FILE_FOOTER, strlen(FILE_FOOTER) + 1);
+		fwrite(fileHeaderBuffer, sizeof(int8), _countof(fileHeaderBuffer), pBinaryExecutable);
+		fclose(pBinaryExecutable);
+		pBinaryExecutable = NULL;
+	}
+
 	return Success;
 }
 
@@ -61,19 +91,6 @@ void convertLineToInstruction(const int8 * instructionLine, bool isLastInstructi
 	int16 generatedInstruction = 0;
 	int8* commaPos = NULL;
 	int32 index;
-
-	if (pBinaryExecutable == NULL)
-	{
-		fopen_s(&pBinaryExecutable, "assembled.msm", "wb+");
-	}
-	assert(pBinaryExecutable != NULL);
-
-	if (pBinaryExecutable == NULL)
-	{
-		handleError("Failed to create binary format!");
-		pauseForReturnKey();
-		return;
-	}
 
 	commaPos = strchr(instructionLine, ','); // check if there's more than 1 arg
 
@@ -158,12 +175,6 @@ void convertLineToInstruction(const int8 * instructionLine, bool isLastInstructi
 	{
 
 	}
-
-	if (pBinaryExecutable && isLastInstruction)
-	{
-		fclose(pBinaryExecutable);
-		pBinaryExecutable = NULL;
-	}
 }
 
 int8 convertStringToOpcode(const int8 * inBuffer)
@@ -180,15 +191,15 @@ int8 convertStringToOpcode(const int8 * inBuffer)
 		buffer[i] = (int8)towlower(inBuffer[i]);
 	}
 
-	if (strcmp(buffer, "load") == true)
+	if (strcmp(buffer, "load") == 0)
 	{
 		return OP_LOAD;
 	}
-	else if (strcmp(buffer, "store") == true)
+	else if (strcmp(buffer, "store") == 0)
 	{
 		return OP_STORE;
 	}
-	else if (strcmp(buffer, "add") == true)
+	else if (strcmp(buffer, "add") == 0)
 	{
 		return OP_ADD;
 	}
@@ -197,8 +208,7 @@ int8 convertStringToOpcode(const int8 * inBuffer)
 
 bool isArgRegister(const int8 * inBuffer)
 {
-	int8* ptr = strchr(inBuffer, 'r');
-
+	const int8* ptr = strchr(inBuffer, REGISTER_PREFIX);
 	return ptr != NULL;
 }
 
@@ -227,7 +237,7 @@ int24 createInstructionInteger(uint8 opCode, int32 argCount, ...)
 		const int8 arg1 = va_arg(list, int8);
 
 		instructionInt.val |= (arg0 << ARG0_SHIFT);
-		instructionInt.val |= (arg1 << ARG1_SHIFT);
+		instructionInt.val |= arg1;
 		break;
 	}
 	default:
