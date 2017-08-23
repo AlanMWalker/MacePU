@@ -125,6 +125,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\assembler\Assembler.h" />
+    <ClInclude Include="include\assembler\FiletypeInformation.h" />
     <ClInclude Include="include\error\ErrorUtils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

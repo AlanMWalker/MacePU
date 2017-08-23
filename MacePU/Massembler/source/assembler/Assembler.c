@@ -13,11 +13,16 @@ static const char REGISTER_PREFIX = 'r';
 static FILE* pFile = NULL;
 static FILE* pBinaryExecutable = NULL;
 
+enum MASMPArseError
+{
+	NoParseError = 0
+};
+
 AssemblerReturnCode assembleFile(const char * masmFileLoc)
 {
-	int8 instrLine[256];
 	int32 result = fopen_s(&pFile, masmFileLoc, "r");
 
+	//Sanity checks on assembly file passed 
 	assert(pFile != NULL);
 
 	if (result != 0)
@@ -40,24 +45,28 @@ AssemblerReturnCode assembleFile(const char * masmFileLoc)
 	}
 
 	// Write binary header to the assembled file
-	int8 fileHeaderBuffer[_countof(FILE_HEADER)];
-	memcpy_s(fileHeaderBuffer, _countof(FILE_HEADER), FILE_HEADER, strlen(FILE_HEADER) + 1);
+	fwrite(FILE_HEADER, sizeof(int8), strlen(FILE_HEADER) + 1, pBinaryExecutable);
 
-	fwrite(fileHeaderBuffer, sizeof(int8), _countof(fileHeaderBuffer), pBinaryExecutable);
+	InstructionLine instruction;
+	int32 lineNumber = 0;
 
 	while (!feof(pFile))
 	{
-		int8* rtrn = fgets(instrLine, _countof(instrLine), pFile);
+		const int8* rtrn = fgets(instruction.instructionLineString, _countof(instruction.instructionLineString), pFile);
+		instruction.instructionLineNumber = lineNumber;
 		if (rtrn != NULL)
 		{
-			printf("%s\n", instrLine);
-			convertLineToInstruction(instrLine, false);
+			printf("%s\n", instruction.instructionLineString);
+			instruction.isLastInstruction = false;
 		}
 		else
 		{
-			convertLineToInstruction(instrLine, true);
+			instruction.isLastInstruction = true;
 		}
-		memset(instrLine, MEMSET_RESET, strlen(instrLine));
+		convertLineToInstruction(&instruction);
+
+		memset(instruction.instructionLineString, MEMSET_RESET, strlen(instruction.instructionLineString) + 1);
+		++lineNumber;
 	}
 
 	if (pFile != NULL)
@@ -68,8 +77,7 @@ AssemblerReturnCode assembleFile(const char * masmFileLoc)
 
 	if (pBinaryExecutable != NULL)
 	{
-		memcpy_s(fileHeaderBuffer, _countof(FILE_FOOTER), FILE_FOOTER, strlen(FILE_FOOTER) + 1);
-		fwrite(fileHeaderBuffer, sizeof(int8), _countof(fileHeaderBuffer), pBinaryExecutable);
+		fwrite(FILE_FOOTER, sizeof(int8), strlen(FILE_FOOTER) + 1, pBinaryExecutable);
 		fclose(pBinaryExecutable);
 		pBinaryExecutable = NULL;
 	}
@@ -77,34 +85,42 @@ AssemblerReturnCode assembleFile(const char * masmFileLoc)
 	return Success;
 }
 
-void convertLineToInstruction(const int8 * instructionLine, bool isLastInstruction)
+//TODO Change return MSMPArseError
+void convertLineToInstruction(const InstructionLine* pInstructionLine)
 {
-	assert(instructionLine != NULL);
+	// Sanity checks on instruction line validity
+	assert(pInstructionLine != NULL);
+	assert(pInstructionLine->instructionLineString != NULL && pInstructionLine->instructionLineString >= 0);
 
-	if (instructionLine == NULL)
+	if (pInstructionLine == NULL)
+	{
+		return;
+	}
+
+	if (pInstructionLine->instructionLineString == NULL || pInstructionLine->instructionLineNumber < 0)
 	{
 		return;
 	}
 
 	static int8 buffer[100];
-	const int32 StringLength = (signed)strlen(instructionLine);
+	const int32 StringLength = (signed)strlen(pInstructionLine->instructionLineString);
 	int16 generatedInstruction = 0;
 	int8* commaPos = NULL;
 	int32 index;
 
-	commaPos = strchr(instructionLine, ','); // check if there's more than 1 arg
+	commaPos = strchr(pInstructionLine->instructionLineString, ','); // check if there's more than 1 arg
 
 	if (commaPos != NULL) // if there's more than 1 argument
 	{
-		for (index = 0; index < (signed)strlen(instructionLine); ++index)
+		for (index = 0; index < (signed)strlen(pInstructionLine->instructionLineString); ++index)
 		{
-			if (instructionLine[index] == ' ')
+			if (pInstructionLine->instructionLineString[index] == ' ')
 			{
 				buffer[index] = '\0';
 				++index;  // ignore space between args
 				break;
 			}
-			buffer[index] = instructionLine[index];
+			buffer[index] = pInstructionLine->instructionLineString[index];
 		}
 
 		int32 opcode = convertStringToOpcode(buffer);
@@ -120,14 +136,14 @@ void convertLineToInstruction(const int8 * instructionLine, bool isLastInstructi
 		memset(buffer, MEMSET_RESET, strlen(buffer)); // clear buffer
 													  //extract arg from instruction line string
 		int32 indexBuff = 0;
-		for (index; index < (signed)strlen(instructionLine); ++index)
+		for (index; index < (signed)strlen(pInstructionLine->instructionLineString); ++index)
 		{
-			if (instructionLine[index] == *commaPos)
+			if (pInstructionLine->instructionLineString[index] == *commaPos)
 			{
 				buffer[indexBuff] = '\0';
 				break;
 			}
-			buffer[indexBuff] = instructionLine[index];
+			buffer[indexBuff] = pInstructionLine->instructionLineString[index];
 			++indexBuff;
 		}
 
@@ -146,14 +162,14 @@ void convertLineToInstruction(const int8 * instructionLine, bool isLastInstructi
 
 		index += 1;
 		indexBuff = 0;
-		for (index; index < (signed)strlen(instructionLine); ++index)
+		for (index; index < (signed)strlen(pInstructionLine->instructionLineString); ++index)
 		{
-			if (instructionLine[index] == '\n')
+			if (pInstructionLine->instructionLineString[index] == '\n')
 			{
 				buffer[indexBuff] = '\0';
 				break;
 			}
-			buffer[indexBuff] = instructionLine[index];
+			buffer[indexBuff] = pInstructionLine->instructionLineString[index];
 			++indexBuff;
 		}
 
@@ -203,6 +219,7 @@ int8 convertStringToOpcode(const int8 * inBuffer)
 	{
 		return OP_ADD;
 	}
+
 	return -1;
 }
 
@@ -212,9 +229,48 @@ bool isArgRegister(const int8 * inBuffer)
 	return ptr != NULL;
 }
 
+//TODO Change return to MSMParseError
+bool isValidInstructionLine(const char * instructionLine, int8 argCount)
+{
+	assert(argCount >= 0 && argCount <= MAX_ARG_COUNT);
+
+	if (argCount < 0 || argCount > MAX_ARG_COUNT)
+	{
+		return false;
+	}
+
+	const int32 StringLength = strlen(instructionLine) + 1;
+	int8* commaPos = NULL;
+
+	switch (argCount)
+	{
+	case 0:
+	{
+		commaPos = strchr(instructionLine, ',');
+		if (commaPos != NULL)
+		{
+			printf("Invalid instruction line! Comma found on line featuring 0 argument operation");
+		}
+		break;
+	}
+	case 1:
+
+		break;
+	case 2:
+
+		break;
+
+	default:
+		return false;
+	}
+
+	return true;
+}
+
 int24 createInstructionInteger(uint8 opCode, int32 argCount, ...)
 {
 	assert(argCount >= 0);
+
 	int24 instructionInt;
 	instructionInt.val = 0;
 	va_list list;
@@ -247,6 +303,10 @@ int24 createInstructionInteger(uint8 opCode, int32 argCount, ...)
 	}
 
 	va_end(list);
+
+#if DEBUG_ASSEMBLED
+	printf("value of instruc line %d\n", instructionInt.val);
+#endif
 
 	return instructionInt;
 }

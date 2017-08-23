@@ -15,9 +15,6 @@
 //TODO: Allow user to specify the filename of the assembled binary format
 //TODO: Create option to save file to directory of users choice (via command line arg)
 
-#define MASM_FILE_EXT ".masm" // assembly file text format 
-#define CPU_BINARY_FORMAT ".msm"  // assembly binary executable format
-
 int main(int argc, int8* argv[])
 {
 	if (argc < 2)
@@ -44,16 +41,22 @@ int main(int argc, int8* argv[])
 	}
 
 	AssemblerReturnCode code = assembleFile(argv[1]);
-	switch (code)
+
+	if (code != 0)
 	{
-	case UnableToCreateFile:
-		handleError("Unable to create the msm binary file!");
-		break;
-	default:
-		break;
+		switch (code)
+		{
+		case UnableToCreateFile:
+			handleError("Unable to create the msm binary file!");
+			break;
+		default:
+			break;
+		}
+		return code;
 	}
 
 #if DEBUG_ASSEMBLED
+	printf("\n\nPrint assembled file debug\n");
 
 	FILE* file = NULL;
 	errno_t result = fopen_s(&file, "assembled.msm", "rb");
@@ -67,7 +70,7 @@ int main(int argc, int8* argv[])
 	uint8 tempBuff[50];
 
 	// Read Header
-	const uint64 readBytes = fread_s(tempBuff, _countof(tempBuff), sizeof(int8), strlen(FILE_HEADER) + 1, file);
+	const uint32 readBytes = fread_s(tempBuff, _countof(tempBuff), sizeof(int8), strlen(FILE_HEADER) + 1, file);
 
 	if (strcmp(tempBuff, FILE_HEADER) != 0)
 	{

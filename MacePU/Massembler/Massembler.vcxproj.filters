@@ -35,5 +35,8 @@
     <ClInclude Include="include\error\ErrorUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\assembler\FiletypeInformation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
