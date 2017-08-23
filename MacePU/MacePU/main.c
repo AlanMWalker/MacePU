@@ -20,13 +20,17 @@ P.S Check the Git readme for links I used for research.
 #include <stdbool.h>
 #include <string.h>
 #include <stdarg.h>	
+#include <cassert>
 
-#include "include\OperationCodes.h"
-#include "include\DataTypes.h"
+#include <vld.h> // visual leak detector
+
+#include "include\cpudefs\OperationCodes.h"
+#include "include\cpudefs\DataTypes.h"
 
 #define REG_TOTAL 8
 #define MAX_ARGS 3
 #define IP 7
+
 
 // Basic CPU simulation featuring assembler for the project
 // 8 * 8bit CPU registers  

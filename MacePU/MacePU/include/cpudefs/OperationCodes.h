@@ -11,19 +11,12 @@
 
 #define INSTRUCTION_SHIFT 16
 #define ARG0_SHIFT 8
-#define ARG1_SHIFT 4
 
 #define INSTRUCTION_MASK 0xFF0000
 #define ARG0_MASK 0x00FF00
 #define ARG1_MASK 0x0000FF
 
-typedef struct _uint24
-{
-	unsigned int val : 24;
-} uint24;
+#define MAX_ARG_COUNT 2
 
-typedef struct _int24
-{
-	signed int val : 24;
-} int24;
+
 #endif // !OPERATION_CODES_H

@@ -1,43 +1,22 @@
 #include <stdio.h>	
-#include <string.h>
 #include <stdlib.h>
+#include <cassert>
+#include <string.h>
 
-#include "..\MacePU\include\OperationCodes.h"
-#include "..\MacePU\include\DataTypes.h"
+#include <vld.h> // visual leak detector
 
-#define MASM_FILE_EXT ".masm"
+#include "OperationCodes.h"
+#include "DataTypes.h"
 
-void pauseForReturnKey()
+#include "assembler\Assembler.h"
+#include "error\ErrorUtils.h"
+
+//TODO: Convert MASM into a binary format that can be loaded into memory by the CPU then executed
+//TODO: Allow user to specify the filename of the assembled binary format
+//TODO: Create option to save file to directory of users choice (via command line arg)
+
+int main(int argc, int8* argv[])
 {
-	printf("Hit return to close...\n");
-	scanf_s("");
-}
-
-void handleError(const char* failedString)
-{
-	printf(failedString);
-	printf("\n");
-	pauseForReturnKey();
-}
-
-void convertLineToInstruction(char* instructionLine);
-
-int main(int argc, char* argv[])
-{
-	char instrLine[256];
-
-	uint24 i;
-	i.val = OP_STORE;
-
-	i.val = i.val << INSTRUCTION_SHIFT;
-
-	i.val |= (1 << ARG0_SHIFT);
-	i.val |= (2 << ARG1_SHIFT);
-
-	//OP_MASK >> OP_SHIFT
-
-	int8 opcode = (i.val & INSTRUCTION_MASK) >> INSTRUCTION_SHIFT;
-
 	if (argc < 2)
 	{
 		handleError("No massembly file passed as argument!");
@@ -46,48 +25,79 @@ int main(int argc, char* argv[])
 	}
 
 	int32 argsIndex;
-
-	for (argsIndex = 0; argsIndex < argc; ++argsIndex)
+	bool extensionFound = false;
+	for (argsIndex = 0; argsIndex < argc && !extensionFound; ++argsIndex)
 	{
 		if (strstr(argv[argsIndex], MASM_FILE_EXT))
 		{
-			break;
+			extensionFound = true;
 		}
 	}
 
-	FILE* pFile = NULL;
-	int32 result = fopen_s(&pFile, argv[argsIndex], "r");
+	if (!extensionFound)
+	{
+		handleError("Incorrect file extension for Massembler!");
+		return -1;
+	}
+
+	AssemblerReturnCode code = assembleFile(argv[1]);
+
+	if (code != 0)
+	{
+		switch (code)
+		{
+		case UnableToCreateFile:
+			handleError("Unable to create the msm binary file!");
+			break;
+		default:
+			break;
+		}
+		return code;
+	}
+
+#if DEBUG_ASSEMBLED
+	printf("\n\nPrint assembled file debug\n");
+
+	FILE* file = NULL;
+	errno_t result = fopen_s(&file, "assembled.msm", "rb");
 
 	if (result != 0)
 	{
-		handleError("Assembly file not found!");
+		handleError("--DEBUG ERROR -- Failed to open binary assembled file");
+		return -1;
 	}
 
-	while (!feof(pFile))
+	uint8 tempBuff[50];
+
+	// Read Header
+	const uint32 readBytes = fread_s(tempBuff, _countof(tempBuff), sizeof(int8), strlen(FILE_HEADER) + 1, file);
+
+	if (strcmp(tempBuff, FILE_HEADER) != 0)
 	{
-		char* rtrn = fgets(instrLine, _countof(instrLine), pFile);
-		if (rtrn != NULL)
-		{
-			printf("%s\n", instrLine);
-			convertLineToInstruction(instrLine);
-		}
+		handleError("--DEBUG ERROR -- Incorrect file header when debug");
+		return -1;
 	}
 
-	fclose(pFile);
+	memset(tempBuff, MEMSET_RESET, readBytes);
+
+	fread_s(tempBuff, 20, 3, 1, file);
+
+	printf("Opcode = %d, Arg0 = %d, Arg1 = %d\n", tempBuff[2], tempBuff[1], tempBuff[0]);
+	int32 val = 0;
+
+	val |= (tempBuff[2] << INSTRUCTION_SHIFT);
+	val |= (tempBuff[1] << ARG0_SHIFT);
+	val |= tempBuff[0];
+
+	printf("%d\n", val);
+
+	if (file != NULL)
+	{
+		fclose(file);
+		file = NULL;
+	}
+#endif 
 	pauseForReturnKey();
 
 	return 0;
-}
-
-void convertLineToInstruction(char * instructionLine)
-{
-	if (instructionLine == NULL)
-	{
-		return;
-	}
-
-	const int32 StringLength = strlen(instructionLine);
-	int16 generatedInstruction = 0;
-
-
 }

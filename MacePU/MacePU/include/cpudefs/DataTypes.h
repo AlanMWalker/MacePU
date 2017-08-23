@@ -10,4 +10,14 @@ typedef unsigned short     uint16;
 typedef unsigned int       uint32;
 typedef unsigned long long uint64;
 
+typedef struct _uint24
+{
+	unsigned int val : 24;
+} uint24;
+
+typedef struct _int24
+{
+	signed int val : 24;
+} int24;
+
 #endif // !DATA_TYPES_H
