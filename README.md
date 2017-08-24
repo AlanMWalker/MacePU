@@ -34,3 +34,5 @@ Thanks
 - https://www.experts-exchange.com/questions/21280335/CPU-Simulator-in-C.html
 - https://schweigi.github.io/assembler-simulator/instruction-set.html
 - https://www.cs.uaf.edu/2010/fall/cs301/lecture/10_04_malloc.html
+- https://www.quora.com/How-do-assemblers-work
+- http://www.classiccmp.org/8008/8008UM.pdf

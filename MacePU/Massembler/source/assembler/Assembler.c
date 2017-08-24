@@ -20,7 +20,7 @@ enum MASMPArseError
 
 AssemblerReturnCode assembleFile(const char * masmFileLoc)
 {
-	int32 result = fopen_s(&pFile, masmFileLoc, "r");
+	const int32 result = fopen_s(&pFile, masmFileLoc, "r");
 
 	//Sanity checks on assembly file passed 
 	assert(pFile != NULL);
@@ -230,7 +230,7 @@ bool isArgRegister(const int8 * inBuffer)
 }
 
 //TODO Change return to MSMParseError
-bool isValidInstructionLine(const char * instructionLine, int8 argCount)
+bool isValidInstructionLine(const InstructionLine* instructionLine, int8 argCount)
 {
 	assert(argCount >= 0 && argCount <= MAX_ARG_COUNT);
 
@@ -239,27 +239,42 @@ bool isValidInstructionLine(const char * instructionLine, int8 argCount)
 		return false;
 	}
 
-	const int32 StringLength = strlen(instructionLine) + 1;
-	int8* commaPos = NULL;
 
+	const int32 StringLength = strlen(instructionLine->instructionLineString) + 1;
+	int8* commaPos = NULL;
+	
+	//below is comma placement & argument validity check
 	switch (argCount)
 	{
 	case 0:
+	case 1:
 	{
-		commaPos = strchr(instructionLine, ',');
+		commaPos = strchr(instructionLine->instructionLineString, ',');
 		if (commaPos != NULL)
 		{
-			printf("Invalid instruction line! Comma found on line featuring 0 argument operation");
+			printf("Invalid instruction line! Comma found on line featuring %d argument operation (line number %d: )\n", argCount, instructionLine->instructionLineNumber);
+			return false;
 		}
 		break;
 	}
-	case 1:
-
-		break;
 	case 2:
+	{
+		int32 commaCount = 0;
+		for (int32 i = 0; i < StringLength; ++i)
+		{
+			if (instructionLine->instructionLineString[i] == ',')
+			{
+				++commaCount;
+			}
 
+			//if more than one comma wsa found whilst parsing the line
+			if (commaCount > 1)
+			{
+				printf("Comma found at invalid position in instruction line (position: %d of line number %d)\n", (i + 1), instructionLine->instructionLineNumber);
+			}
+		}
 		break;
-
+	}
 	default:
 		return false;
 	}

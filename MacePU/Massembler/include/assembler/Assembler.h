@@ -25,7 +25,6 @@ typedef enum _AssemblerReturnCode
 	ParsingError = -2
 } AssemblerReturnCode;
 
-
 //Non-parsed instruction line data structure
 //TODO if functions associated with manipulating this structure grow beyond 2-3 then create separate translation unit.
 typedef struct _instrLine
@@ -35,6 +34,14 @@ typedef struct _instrLine
 	bool isLastInstruction;
 }  InstructionLine;
 
+//Parsed instruction line data structure
+typedef struct _pinstrLine
+{
+	int8 opcode;
+	int8 arg0;
+	int8 arg1;
+	int8 argCount;
+} ParsedLine;
 
 AssemblerReturnCode assembleFile(const char* masmFileLoc);
 
@@ -44,7 +51,7 @@ int8 convertStringToOpcode(const int8* inBuffer);
 
 bool isArgRegister(const int8* inBuffer);
 
-bool isValidInstructionLine(const char* instructionLine, int8 argCount); // Is the instruction line syntactically correct
+bool isValidInstructionLine(const InstructionLine* instructionLine, int8 argCount); // Is the instruction line syntactically correct
 
 int24 createInstructionInteger(uint8 opCode, int32 argCount, ...);
 
