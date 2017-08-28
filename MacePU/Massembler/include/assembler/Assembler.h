@@ -22,7 +22,8 @@ typedef enum _AssemblerReturnCode
 {
 	Success = 0,
 	UnableToCreateFile = -1,
-	ParsingError = -2
+	UnableToLoadFile = -2,
+	ParsingError = -3
 } AssemblerReturnCode;
 
 //Non-parsed instruction line data structure
@@ -45,14 +46,10 @@ typedef struct _pinstrLine
 
 AssemblerReturnCode assembleFile(const char* masmFileLoc);
 
-void convertLineToInstruction(const InstructionLine* pInstructionLine);
-
-int8 convertStringToOpcode(const int8* inBuffer);
-
 bool isArgRegister(const int8* inBuffer);
 
 bool isValidInstructionLine(const InstructionLine* instructionLine, int8 argCount); // Is the instruction line syntactically correct
 
-int24 createInstructionInteger(uint8 opCode, int32 argCount, ...);
+int24 createInstructionInteger(ParsedLine* pParsedLIne);
 
 #endif //!ASSEMBLER_H

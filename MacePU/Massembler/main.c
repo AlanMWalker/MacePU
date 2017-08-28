@@ -77,25 +77,27 @@ int main(int argc, int8* argv[])
 		handleError("--DEBUG ERROR -- Incorrect file header when debug");
 		return -1;
 	}
+	while (!feof(file))
+	{
+		memset(tempBuff, MEMSET_RESET, readBytes);
 
-	memset(tempBuff, MEMSET_RESET, readBytes);
+		fread_s(tempBuff, 20, 3, 1, file);
 
-	fread_s(tempBuff, 20, 3, 1, file);
+		printf("Opcode = %d, Arg0 = %d, Arg1 = %d\n", tempBuff[2], tempBuff[1], tempBuff[0]);
+		int32 val = 0;
 
-	printf("Opcode = %d, Arg0 = %d, Arg1 = %d\n", tempBuff[2], tempBuff[1], tempBuff[0]);
-	int32 val = 0;
+		val |= (tempBuff[2] << INSTRUCTION_SHIFT);
+		val |= (tempBuff[1] << ARG0_SHIFT);
+		val |= tempBuff[0];
 
-	val |= (tempBuff[2] << INSTRUCTION_SHIFT);
-	val |= (tempBuff[1] << ARG0_SHIFT);
-	val |= tempBuff[0];
-
-	printf("%d\n", val);
-
+		printf("%d\n", val);
+	}
 	if (file != NULL)
 	{
 		fclose(file);
 		file = NULL;
 	}
+
 #endif 
 	pauseForReturnKey();
 

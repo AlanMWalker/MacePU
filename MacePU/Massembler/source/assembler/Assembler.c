@@ -1,27 +1,34 @@
-#include <stdio.h>	
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <cassert>
 #include <ctype.h>
-#include <stdarg.h>
 #include <string.h>
 
 #include "assembler\Assembler.h"
+
+#define STRING_MATCH 0
+#define INVALID_INSTRUCTION_LINE 0xFF << INSTRUCTION_SHIFT
 
 static const char REGISTER_PREFIX = 'r';
 
 static FILE* pFile = NULL;
 static FILE* pBinaryExecutable = NULL;
 
-enum MASMPArseError
+typedef enum _masmparseError
 {
-	NoParseError = 0
-};
+	NoParseError = 0,
+	OpcodeNotFound = -1,
+	InvalidInstructionLine = -2
+
+} MASMParseError;
+
+static MASMParseError convertStringToOpcode(const InstructionLine* pinstLine, ParsedLine* pParsedLine);
+MASMParseError convertLineToInstruction(const InstructionLine* pInstructionLine);
 
 AssemblerReturnCode assembleFile(const char * masmFileLoc)
 {
 	const int32 result = fopen_s(&pFile, masmFileLoc, "r");
-
 	//Sanity checks on assembly file passed 
 	assert(pFile != NULL);
 
@@ -49,6 +56,7 @@ AssemblerReturnCode assembleFile(const char * masmFileLoc)
 
 	InstructionLine instruction;
 	int32 lineNumber = 0;
+	MASMParseError lineParseResult = NoParseError;
 
 	while (!feof(pFile))
 	{
@@ -63,10 +71,19 @@ AssemblerReturnCode assembleFile(const char * masmFileLoc)
 		{
 			instruction.isLastInstruction = true;
 		}
-		convertLineToInstruction(&instruction);
 
+		lineParseResult = convertLineToInstruction(&instruction);
+		if (lineParseResult != NoParseError)
+		{
+			break;
+		}
 		memset(instruction.instructionLineString, MEMSET_RESET, strlen(instruction.instructionLineString) + 1);
 		++lineNumber;
+	}
+
+	if (lineParseResult != NoParseError)
+	{
+		return ParsingError;
 	}
 
 	if (pFile != NULL)
@@ -86,7 +103,7 @@ AssemblerReturnCode assembleFile(const char * masmFileLoc)
 }
 
 //TODO Change return MSMPArseError
-void convertLineToInstruction(const InstructionLine* pInstructionLine)
+MASMParseError convertLineToInstruction(const InstructionLine* pInstructionLine)
 {
 	// Sanity checks on instruction line validity
 	assert(pInstructionLine != NULL);
@@ -94,16 +111,17 @@ void convertLineToInstruction(const InstructionLine* pInstructionLine)
 
 	if (pInstructionLine == NULL)
 	{
-		return;
+		return InvalidInstructionLine;
 	}
 
 	if (pInstructionLine->instructionLineString == NULL || pInstructionLine->instructionLineNumber < 0)
 	{
-		return;
+		return InvalidInstructionLine;
 	}
 
 	static int8 buffer[100];
 	const int32 StringLength = (signed)strlen(pInstructionLine->instructionLineString);
+	ParsedLine parsedInstructionLine = { 0 , 0 , 0, 0 };
 	int16 generatedInstruction = 0;
 	int8* commaPos = NULL;
 	int32 index;
@@ -112,6 +130,7 @@ void convertLineToInstruction(const InstructionLine* pInstructionLine)
 
 	if (commaPos != NULL) // if there's more than 1 argument
 	{
+		parsedInstructionLine.argCount = 2;
 		for (index = 0; index < (signed)strlen(pInstructionLine->instructionLineString); ++index)
 		{
 			if (pInstructionLine->instructionLineString[index] == ' ')
@@ -123,16 +142,17 @@ void convertLineToInstruction(const InstructionLine* pInstructionLine)
 			buffer[index] = pInstructionLine->instructionLineString[index];
 		}
 
-		int32 opcode = convertStringToOpcode(buffer);
+		MASMParseError opcode = convertStringToOpcode(pInstructionLine, &parsedInstructionLine);
+
+		if (opcode != NoParseError)
+		{
+			handleError("Error when finding opcode!");
+			pauseForReturnKey();
+			return opcode;
+		}
 
 		//TODO insert opcode arg validity check here!
 
-		if (opcode == -1)
-		{
-			handleError("Failed to find opcode!");
-			pauseForReturnKey();
-			return;
-		}
 		memset(buffer, MEMSET_RESET, strlen(buffer)); // clear buffer
 													  //extract arg from instruction line string
 		int32 indexBuff = 0;
@@ -184,43 +204,74 @@ void convertLineToInstruction(const InstructionLine* pInstructionLine)
 				arg1 = (int8)strtol(buffer, NULL, 16);
 			}
 		}
-		int24 instruc = createInstructionInteger(opcode, 2, arg0, arg1);
+		int24 instruc = createInstructionInteger(&parsedInstructionLine);
 		fwrite((void*)&instruc, 3, 1, pBinaryExecutable);
 	}
 	else // if there's not
 	{
 
 	}
+
+	return NoParseError;
 }
 
-int8 convertStringToOpcode(const int8 * inBuffer)
+static MASMParseError convertStringToOpcode(const InstructionLine* pinstLine, ParsedLine* pParsedLine)
 {
 	//TOOD: Convert checking to read from a text file and determine the correct instruction by a table
-	assert(inBuffer);
+	assert(pinstLine);
+	assert(pParsedLine);
+	assert(pinstLine->instructionLineString);
 
-	int8 buffer[250];
-	memcpy_s(buffer, _countof(buffer), inBuffer, strlen(inBuffer) + 1);
+	if (pinstLine == NULL || pParsedLine == NULL || pinstLine->instructionLineString == NULL)
+	{
+		printf("Nullptr found when parsing opcode\n");
+	}
+
+	// Extract the operation name 
+	int8 buffer[100];
+	memcpy_s(buffer, _countof(buffer), pinstLine->instructionLineString, strlen(pinstLine->instructionLineString) + 1);
+
 	const int32 stringlength = (signed)strlen(buffer);
+	const int8* EndOfOpcode = strchr(buffer, ' '); // find the first space in the instruction line as it will indicate the end position of the opcode stubstring
 
-	for (int32 i = 0; i < stringlength; ++i)
+	//if we couldn't find the space character the line is invalid, so return opcode not found 
+	//TODO further syntactic analysis here is possible in future
+	if (EndOfOpcode == NULL)
 	{
-		buffer[i] = (int8)towlower(inBuffer[i]);
-	}
-
-	if (strcmp(buffer, "load") == 0)
-	{
-		return OP_LOAD;
-	}
-	else if (strcmp(buffer, "store") == 0)
-	{
-		return OP_STORE;
-	}
-	else if (strcmp(buffer, "add") == 0)
-	{
-		return OP_ADD;
+		return OpcodeNotFound;
 	}
 
-	return -1;
+	int8* nullTerm = buffer;
+
+	for (; nullTerm != NULL; ++nullTerm)
+	{
+		if (nullTerm == EndOfOpcode)
+		{// if we reach the end of the string, end
+			*nullTerm = '\0';
+			break;
+		}
+		*nullTerm = (int8)tolower(*nullTerm);
+	}
+
+	//TODO convert if-block to a lookup table selection
+	if (strcmp(buffer, "load") == STRING_MATCH)
+	{
+		pParsedLine->opcode = OP_LOAD;
+	}
+	else if (strcmp(buffer, "store") == STRING_MATCH)
+	{
+		pParsedLine->opcode = OP_STORE;
+	}
+	else if (strcmp(buffer, "add") == STRING_MATCH)
+	{
+		pParsedLine->opcode = OP_ADD;
+	}
+	else
+	{
+		return OpcodeNotFound;
+	}
+
+	return NoParseError;
 }
 
 bool isArgRegister(const int8 * inBuffer)
@@ -239,10 +290,9 @@ bool isValidInstructionLine(const InstructionLine* instructionLine, int8 argCoun
 		return false;
 	}
 
-
 	const int32 StringLength = strlen(instructionLine->instructionLineString) + 1;
 	int8* commaPos = NULL;
-	
+
 	//below is comma placement & argument validity check
 	switch (argCount)
 	{
@@ -282,42 +332,40 @@ bool isValidInstructionLine(const InstructionLine* instructionLine, int8 argCoun
 	return true;
 }
 
-int24 createInstructionInteger(uint8 opCode, int32 argCount, ...)
+int24 createInstructionInteger(ParsedLine* pParsedLIne)
 {
-	assert(argCount >= 0);
-
 	int24 instructionInt;
 	instructionInt.val = 0;
-	va_list list;
+	assert(pParsedLIne != NULL);
+	if (pParsedLIne == NULL)
+	{
+		instructionInt.val = INVALID_INSTRUCTION_LINE;
+		return instructionInt;
+	}
 
-	va_start(list, argCount);
-	instructionInt.val |= opCode;
+	instructionInt.val |= pParsedLIne->opcode;
 	instructionInt.val = instructionInt.val << INSTRUCTION_SHIFT;
 
-	switch (argCount)
+	switch (pParsedLIne->argCount)
 	{
 	case 1:
 	{
-		const int8 arg = va_arg(list, int8);
-		instructionInt.val |= (arg << ARG0_SHIFT);
+		//const int8 arg = va_arg(list, int8);
+		instructionInt.val |= (pParsedLIne->arg0 << ARG0_SHIFT);
 		break;
 	}
 	case 2:
 	{
-		const int8 arg0 = va_arg(list, int8);
-		const int8 arg1 = va_arg(list, int8);
-
-		instructionInt.val |= (arg0 << ARG0_SHIFT);
-		instructionInt.val |= arg1;
+		instructionInt.val |= (pParsedLIne->arg0 << ARG0_SHIFT);
+		instructionInt.val |= pParsedLIne->arg1;
 		break;
 	}
 	default:
-		handleError("Too many args passed for instruction");
+		handleError("Too many or too few args passed for instruction");
 		pauseForReturnKey();
 		break;
 	}
 
-	va_end(list);
 
 #if DEBUG_ASSEMBLED
 	printf("value of instruc line %d\n", instructionInt.val);
