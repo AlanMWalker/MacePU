@@ -11,6 +11,7 @@
 #define MEMSET_RESET -52
 
 #define DEBUG_ASSEMBLED 1 // Set 1 if need to debug assembled file
+#define	MAX_PROGRAM_MEMORY_SIZE 0xFF << 16
 /*
 File structure -
 5 bytes header - "S-MSM" (inc null terminator)
@@ -43,6 +44,14 @@ typedef struct _pinstrLine
 	int8 arg1;
 	int8 argCount;
 } ParsedLine;
+
+
+typedef struct _instrMemory
+{
+	int8 instructionMemory[MAX_PROGRAM_MEMORY_SIZE];
+	int16 numberOfInstructions;
+} InstructionMemory;
+
 
 AssemblerReturnCode assembleFile(const char* masmFileLoc);
 

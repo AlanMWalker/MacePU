@@ -8,18 +8,21 @@
 #include "assembler\Assembler.h"
 
 #define STRING_MATCH 0
-#define INVALID_INSTRUCTION_LINE 0xFF << INSTRUCTION_SHIFT
+#define INVALID_INSTRUCTION_LINE 0xFF << OPCODE_SHIFT
 
 static const char REGISTER_PREFIX = 'r';
 
 static FILE* pFile = NULL;
 static FILE* pBinaryExecutable = NULL;
 
+static InstructionMemory programMemory;
+
 typedef enum _masmparseError
 {
 	NoParseError = 0,
 	OpcodeNotFound = -1,
-	InvalidInstructionLine = -2
+	InvalidInstructionLine = -2,
+	ProgramMemoryOverflow = -3
 
 } MASMParseError;
 
@@ -29,6 +32,9 @@ MASMParseError convertLineToInstruction(const InstructionLine* pInstructionLine)
 AssemblerReturnCode assembleFile(const char * masmFileLoc)
 {
 	const int32 result = fopen_s(&pFile, masmFileLoc, "r");
+
+	programMemory.numberOfInstructions = 0;
+
 	//Sanity checks on assembly file passed 
 	assert(pFile != NULL);
 
@@ -92,12 +98,30 @@ AssemblerReturnCode assembleFile(const char * masmFileLoc)
 		pFile = NULL;
 	}
 
+	//write the number of instructions to a file
+	fwrite(&programMemory.numberOfInstructions, sizeof(int16), 1, pBinaryExecutable);
+
+	const int8 increment = ADDRESS_BUS_LENGTH_BYTES;
+
+	int8* pMemoryBlock = programMemory.instructionMemory;
+
+	for (; pMemoryBlock != NULL; pMemoryBlock += increment)
+	{
+		const ptrdiff_t index = (pMemoryBlock - programMemory.instructionMemory);
+		if (index > programMemory.numberOfInstructions * ADDRESS_BUS_LENGTH_BYTES || index + 1 == MAX_PROGRAM_MEMORY_SIZE)
+		{
+			break;
+		}
+		fwrite(pMemoryBlock, ADDRESS_BUS_LENGTH_BYTES, 1, pBinaryExecutable);
+	}
+
 	if (pBinaryExecutable != NULL)
 	{
 		fwrite(FILE_FOOTER, sizeof(int8), strlen(FILE_FOOTER) + 1, pBinaryExecutable);
 		fclose(pBinaryExecutable);
 		pBinaryExecutable = NULL;
 	}
+
 
 	return Success;
 }
@@ -127,6 +151,10 @@ MASMParseError convertLineToInstruction(const InstructionLine* pInstructionLine)
 	int32 index;
 
 	commaPos = strchr(pInstructionLine->instructionLineString, ','); // check if there's more than 1 arg
+	if (programMemory.numberOfInstructions == MAX_PROGRAM_MEMORY_SIZE)
+	{
+		return ProgramMemoryOverflow;
+	}
 
 	if (commaPos != NULL) // if there's more than 1 argument
 	{
@@ -167,10 +195,9 @@ MASMParseError convertLineToInstruction(const InstructionLine* pInstructionLine)
 			++indexBuff;
 		}
 
-		int8 arg0, arg1;
 		if (isArgRegister(buffer)) // if the instruction is an argument 
 		{
-			arg0 = atoi(&buffer[1]);
+			parsedInstructionLine.arg0 = atoi(&buffer[1]);
 		}
 		else
 		{
@@ -197,20 +224,32 @@ MASMParseError convertLineToInstruction(const InstructionLine* pInstructionLine)
 		{
 			if (buffer[0] == '0' && buffer[1] == 'x')
 			{
-				arg1 = atoi(buffer);
+				parsedInstructionLine.arg1 = atoi(buffer);
 			}
 			else
 			{
-				arg1 = (int8)strtol(buffer, NULL, 16);
+				parsedInstructionLine.arg1 = (int8)strtol(buffer, NULL, 16);
 			}
 		}
-		int24 instruc = createInstructionInteger(&parsedInstructionLine);
-		fwrite((void*)&instruc, 3, 1, pBinaryExecutable);
 	}
 	else // if there's not
 	{
 
 	}
+
+	//TODO re-write to make the instruction be written into array by createInstructionInteger
+	int24 instruc = createInstructionInteger(&parsedInstructionLine);
+
+	//Temp conversion from in24 to instruc
+	//write in little endian form
+	int16 indexInArray = programMemory.numberOfInstructions * ADDRESS_BUS_LENGTH_BYTES;
+	programMemory.instructionMemory[indexInArray] = (instruc.val & ARG1_MASK);
+	programMemory.instructionMemory[indexInArray + 1] = (instruc.val & ARG0_MASK) >> ARG0_SHIFT;
+	programMemory.instructionMemory[indexInArray + 2] = (instruc.val & OPCODE_MASK) >> OPCODE_SHIFT;
+
+	//fwrite((void*)&instruc, 3, 1, pBinaryExecutable);
+
+	++programMemory.numberOfInstructions;
 
 	return NoParseError;
 }
@@ -344,7 +383,7 @@ int24 createInstructionInteger(ParsedLine* pParsedLIne)
 	}
 
 	instructionInt.val |= pParsedLIne->opcode;
-	instructionInt.val = instructionInt.val << INSTRUCTION_SHIFT;
+	instructionInt.val = instructionInt.val << OPCODE_SHIFT;
 
 	switch (pParsedLIne->argCount)
 	{

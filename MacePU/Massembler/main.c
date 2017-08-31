@@ -77,7 +77,11 @@ int main(int argc, int8* argv[])
 		handleError("--DEBUG ERROR -- Incorrect file header when debug");
 		return -1;
 	}
-	while (!feof(file))
+	
+	int16 numberOfInstructions = 0;
+	fread_s(&numberOfInstructions, sizeof(int16), sizeof(int16), 1, file);
+
+	for(int16 i = 0; i < numberOfInstructions; ++i)
 	{
 		memset(tempBuff, MEMSET_RESET, readBytes);
 
@@ -86,7 +90,7 @@ int main(int argc, int8* argv[])
 		printf("Opcode = %d, Arg0 = %d, Arg1 = %d\n", tempBuff[2], tempBuff[1], tempBuff[0]);
 		int32 val = 0;
 
-		val |= (tempBuff[2] << INSTRUCTION_SHIFT);
+		val |= (tempBuff[2] << OPCODE_SHIFT);
 		val |= (tempBuff[1] << ARG0_SHIFT);
 		val |= tempBuff[0];
 

@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
 	while (isCPURunning)
 	{
 		processor.instrOpCode.val = *(uint32*)(Memory + processor.regs[7]);
-		switch (processor.instrOpCode.val & (INSTRUCTION_MASK >> INSTRUCTION_SHIFT))
+		switch (processor.instrOpCode.val & (OPCODE_MASK >> OPCODE_SHIFT))
 		{
 		case OP_LOAD:
 		{
