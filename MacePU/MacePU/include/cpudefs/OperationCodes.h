@@ -25,5 +25,4 @@
 
 #define MAX_ARG_COUNT 2
 
-
 #endif // !OPERATION_CODES_H

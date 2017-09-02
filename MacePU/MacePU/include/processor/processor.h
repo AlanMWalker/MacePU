@@ -27,8 +27,18 @@ void runProcessor();
 
 void deinitProcessor();
 
+bool isValidExecutableFileMarkers(FILE* pBinaryFile); // Are the headers and footers of the file valid?
+
+//static funcs
+
 static void processorTick(Registers* reg);
 
-bool isValidExecutableFileMarkers(FILE* pBinaryFile); // Are the headers and footers of the file valid?
+static void handleInstructionLine(int24 intsrLine, Registers* regs);
+
+static int8 getOpcode(int24 intsrLine);
+
+static int8 getArg0(int24 intsrLine);
+
+static int8 getArg1(int24 intsrLine);
 
 #endif // !PROCESSOR_H

@@ -11,11 +11,14 @@ typedef enum _memInit
 	IncorrectBufferSize = -2
 } MemoryInitialiseError;
 
-static int8* createMemoryByteArray();
+static int8* getByteMemoryArray();
 
 void deinitMemory();
 
 MemoryInitialiseError loadProgramIntoMemory(int16 bufferSize, const int8* memoryByteArray);
 
-uint16 getEndOfExecutableMarker();
+uint16 getEndOfExecutableNumber();
+
+int24 getInstructionLine(uint16 instructionPtrValue);
+
 #endif // !MEMORY_H
