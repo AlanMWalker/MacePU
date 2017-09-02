@@ -29,7 +29,6 @@ typedef enum _AssemblerReturnCode
 } AssemblerReturnCode;
 
 //Non-parsed instruction line data structure
-//TODO if functions associated with manipulating this structure grow beyond 2-3 then create separate translation unit.
 typedef struct _instrLine
 {
 	char instructionLineString[100];

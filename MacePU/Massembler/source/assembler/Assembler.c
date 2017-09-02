@@ -126,7 +126,6 @@ AssemblerReturnCode assembleFile(const char * masmFileLoc)
 	return Success;
 }
 
-//TODO Change return MSMPArseError
 MASMParseError convertLineToInstruction(const InstructionLine* pInstructionLine)
 {
 	// Sanity checks on instruction line validity
@@ -237,11 +236,9 @@ MASMParseError convertLineToInstruction(const InstructionLine* pInstructionLine)
 
 	}
 
-	//TODO re-write to make the instruction be written into array by createInstructionInteger
 	int24 instruc = createInstructionInteger(&parsedInstructionLine);
 
-	//Temp conversion from in24 to instruc
-	//write in little endian form
+	//write into byte array in little endian form
 	int16 indexInArray = programMemory.numberOfInstructions * ADDRESS_BUS_LENGTH_BYTES;
 	programMemory.instructionMemory[indexInArray] = (instruc.val & ARG1_MASK);
 	programMemory.instructionMemory[indexInArray + 1] = (instruc.val & ARG0_MASK) >> ARG0_SHIFT;
@@ -319,7 +316,6 @@ bool isArgRegister(const int8 * inBuffer)
 	return ptr != NULL;
 }
 
-//TODO Change return to MSMParseError
 bool isValidInstructionLine(const InstructionLine* instructionLine, int8 argCount)
 {
 	assert(argCount >= 0 && argCount <= MAX_ARG_COUNT);
