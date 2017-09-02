@@ -1,44 +1,58 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <cassert>
+#include <stdbool.h>
 
 #include "memory\memory.h"
 
-static int8* memoryByteArray = NULL;
+static int16 lastOpcode = 0;
 
-MemoryInitialiseError initialiseMemory()
+int8* createMemoryByteArray()
 {
-	memoryByteArray = (int8*)malloc(MAX_CPU_MEMORY_BYTES * sizeof(int8));
+	static int8* memoryByteArray = NULL;
 
-	if (memoryByteArray == NULL)
-	{
-		return FailedToAllocatePool;
-	}
-
-	return Success;
+	return memoryByteArray ? memoryByteArray : (memoryByteArray = malloc(MAX_CPU_MEMORY_BYTES));
 }
 
 void deinitMemory()
 {
-	free(memoryByteArray);
-	
+	static int8 count = 0;
+	++count;
+	int8* byteArray = createMemoryByteArray();
+	if (byteArray != NULL)
+	{
+		free(byteArray);
+	}
 }
 
-MemoryInitialiseError loadProgramIntoMemory(int16 bufferSize, int8 * pMemByte)
+MemoryInitialiseError loadProgramIntoMemory(int16 bufferSize, const int8 * pMemByte)
 {
+	int8* byteArray = createMemoryByteArray();
 	assert(bufferSize > 0);
-	assert(memoryByteArray != NULL);
+	assert(pMemByte != NULL);
+	assert(byteArray != NULL);
 
-	if (bufferSize <= 0 || memoryByteArray == NULL)
+	if (bufferSize <= 0 || pMemByte == NULL)
 	{
 		printf("Incorrect buffer to load program");
 		return IncorrectBufferSize;
 	}
 
+	if (byteArray == NULL)
+	{
+		return FailedToAllocatePool;
+	}
+
+
 	for (int16 i = 0; i < bufferSize; ++i)
 	{
-		memoryByteArray[i] = (pMemByte[i]);
+		byteArray[i] = (pMemByte[i]);
 	}
 
 	return EXIT_SUCCESS;
+}
+
+uint16 getEndOfExecutableMarker()
+{
+	return lastOpcode;
 }

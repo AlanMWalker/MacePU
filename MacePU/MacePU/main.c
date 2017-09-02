@@ -59,11 +59,20 @@ typedef struct _cpuinfo //ip = reg7
 
 int main(int32 argc, int8* argv[])
 {
-	initProcessor(argc, argv);
+	const ProcessorInitError procInitResult = initProcessor(argc, argv);
+	if (procInitResult != Succes)
+	{
+		printf("Failed to create processor! Result: ", procInitResult);
+		return procInitResult;
+	}
+
 	runProcessor();
+	
 	deinitProcessor();
+
 	system("pause");
 	return 0;
+
 	/*
 	CPU processor;
 

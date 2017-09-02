@@ -2,10 +2,13 @@
 #include <Windows.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <cassert>
 
 #include "cpudefs\DataTypes.h"
 #include "processor\processor.h"
 #include "memory\memory.h"
+
+#include "FiletypeInformation.h"
 
 #define FREE_FILE(file) if(file != NULL){ fclose(file); }
 
@@ -46,6 +49,12 @@ ProcessorInitError initProcessor(int32 argc, int8* argv[])
 		return BinaryTooLarge;
 	}
 
+	if (!isValidExecutableFileMarkers(pBinaryFile))
+	{
+		FREE_FILE(pBinaryFile);
+		return InvalidFileMarkers;
+	}
+
 	int8* byteArray = (int8*)malloc((size_t)binarySize * sizeof(int8));
 
 	if (byteArray == NULL)
@@ -54,19 +63,11 @@ ProcessorInitError initProcessor(int32 argc, int8* argv[])
 	}
 
 	memset(byteArray, 0, (size_t)(sizeof(int8) * binarySize));
-	
-	fread_s(byteArray, binarySize, binarySize, 1, pBinaryFile);
-	
-	MemoryInitialiseError memInit = initialiseMemory();
-	if (memInit != EXIT_SUCCESS)
-	{
 
-		printf("\nMemory initialise error inside: %s", __FILE__);
-		FREE_FILE(pBinaryFile);
-		return MemoryCorruption;
-	}
+	fread_s((void*)byteArray, (size_t)binarySize, (size_t)binarySize, 1, pBinaryFile);
 
-	memInit = loadProgramIntoMemory((int16)binarySize * sizeof(int8), byteArray);
+
+	MemoryInitialiseError memInit = loadProgramIntoMemory((int16)binarySize * sizeof(int8), byteArray);
 
 	if (memInit != EXIT_SUCCESS)
 	{
@@ -83,6 +84,14 @@ ProcessorInitError initProcessor(int32 argc, int8* argv[])
 
 void runProcessor()
 {
+	Registers cpuRegisters;
+	cpuRegisters.programCounter = 0;
+	cpuRegisters.endOfExecutableMarker = 0;
+	for (int8 i = 0; i < _countof(cpuRegisters.gpr); ++i)
+	{
+		cpuRegisters.gpr[i] = 0;
+	}
+
 	bool running = true;
 	int32 tickCount = 5;
 	int32 i = 0;
@@ -94,7 +103,7 @@ void runProcessor()
 		QueryPerformanceFrequency(&tFreq);
 		QueryPerformanceCounter(&tStart);
 
-		processorTick();
+		processorTick(&cpuRegisters);
 
 		QueryPerformanceCounter(&tEnd);
 		tSecsElapsed = (tEnd.QuadPart - tStart.QuadPart) / (double)tFreq.QuadPart;
@@ -108,7 +117,6 @@ void runProcessor()
 			running = false;
 		}
 		++i;
-
 	}
 }
 
@@ -117,6 +125,39 @@ void deinitProcessor()
 	deinitMemory();
 }
 
-void processorTick()
+void processorTick(Registers * regs)
 {
+
+}
+
+bool isValidExecutableFileMarkers(FILE * pBinaryFile)
+{
+	assert(pBinaryFile != NULL);
+
+	if (pBinaryFile == NULL)
+	{
+		return false;
+	}
+
+	int8 markerBuffer[20];
+	fread_s(markerBuffer, _countof(markerBuffer), sizeof(int8), strlen(FILE_HEADER) + 1, pBinaryFile);
+	if (strcmp(markerBuffer, FILE_HEADER) != 0)
+	{
+		printf("Incorrect file header!!\n");
+		return false;
+	}
+
+	fseek(pBinaryFile, -((signed)strlen(FILE_FOOTER) + 1), SEEK_END);
+
+	fread_s(markerBuffer, _countof(markerBuffer), sizeof(int8), strlen(FILE_FOOTER) + 1, pBinaryFile);
+
+	if (strcmp(markerBuffer, FILE_FOOTER))
+	{
+		printf("Incorrect file footer!!\n");
+		return false;
+	}
+
+	fseek(pBinaryFile, 0, SEEK_SET);
+
+	return true;
 }
