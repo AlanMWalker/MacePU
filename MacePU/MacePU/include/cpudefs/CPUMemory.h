@@ -1,0 +1,8 @@
+#ifndef CPU_MEMORY_H
+#define CPU_MEMORY_H
+
+#define MAX_CPU_MEMORY_BYTES 65536
+#define MAX_PROGRAM_MEMORY_BYTES 100
+
+#define GPR_COUNT 8 
+#endif // !CPU_MEMORY_H
