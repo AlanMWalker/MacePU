@@ -20,10 +20,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.c" />
+    <ClCompile Include="source\memory\memory.c" />
+    <ClCompile Include="source\processor\processor.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\cpudefs\CPUMemory.h" />
     <ClInclude Include="include\cpudefs\DataTypes.h" />
     <ClInclude Include="include\cpudefs\OperationCodes.h" />
+    <ClInclude Include="include\memory\memory.h" />
+    <ClInclude Include="include\processor\processor.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{52BDAAB3-92CA-4E82-9C95-D046A583DBE7}</ProjectGuid>
@@ -82,6 +87,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -99,6 +105,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

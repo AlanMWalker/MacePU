@@ -1,0 +1,7 @@
+#ifndef CPU_MEMORY_H
+#define CPU_MEMORY_H
+
+#define MAX_CPU_MEMORY_BYTES 2^16
+#define MAX_PROGRAM_MEMORY_BYTES 100
+
+#endif // !CPU_MEMORY_H

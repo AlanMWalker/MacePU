@@ -27,7 +27,7 @@ typedef enum _masmparseError
 } MASMParseError;
 
 static MASMParseError convertStringToOpcode(const InstructionLine* pinstLine, ParsedLine* pParsedLine);
-MASMParseError convertLineToInstruction(const InstructionLine* pInstructionLine);
+static MASMParseError convertLineToInstruction(const InstructionLine* pInstructionLine);
 
 AssemblerReturnCode assembleFile(const char * masmFileLoc)
 {

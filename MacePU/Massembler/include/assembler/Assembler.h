@@ -15,7 +15,8 @@
 /*
 File structure -
 5 bytes header - "S-MSM" (inc null terminator)
-Instruction Codes until EOF marker
+Number of instructions
+Instructions
 5 bytes footer - "B-MSM" (inc null terminator)
 */
 
@@ -60,5 +61,7 @@ bool isArgRegister(const int8* inBuffer);
 bool isValidInstructionLine(const InstructionLine* instructionLine, int8 argCount); // Is the instruction line syntactically correct
 
 int24 createInstructionInteger(ParsedLine* pParsedLIne);
+
+
 
 #endif //!ASSEMBLER_H

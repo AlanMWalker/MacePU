@@ -21,9 +21,24 @@
     <ClInclude Include="include\cpudefs\OperationCodes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\memory\memory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\processor\processor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\cpudefs\CPUMemory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\memory\memory.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\processor\processor.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

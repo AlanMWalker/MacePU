@@ -15,7 +15,7 @@
 //TODO: Allow user to specify the filename of the assembled binary format
 //TODO: Create option to save file to directory of users choice (via command line arg)
 
-int main(int argc, int8* argv[])
+int main(int32 argc, int8* argv[])
 {
 	if (argc < 2)
 	{

@@ -26,6 +26,7 @@ P.S Check the Git readme for links I used for research.
 
 #include "include\cpudefs\OperationCodes.h"
 #include "include\cpudefs\DataTypes.h"
+#include "processor\processor.h"
 
 #define REG_TOTAL 8
 #define MAX_ARGS 3
@@ -54,20 +55,26 @@ typedef struct _cpuinfo //ip = reg7
 	uint24 instrOpCode;
 } CPU;
 
-void loadInstructionIntoMemory(uint8 opcode, int32 num, ...);
+//void loadInstructionIntoMemory(uint8 opcode, int32 num, ...);
 
-int main(int argc, char* argv[])
+int main(int32 argc, int8* argv[])
 {
+	initProcessor(argc, argv);
+	runProcessor();
+	deinitProcessor();
+	system("pause");
+	return 0;
+	/*
 	CPU processor;
 
 	bool isCPURunning = true;
 
-	memset(Memory, 0, 8 * 2048); // clear memory 
+	memset(Memory, 0, 8 * 2048); // clear memory
 	// Load instruc into memory
 
 	loadInstructionIntoMemory(OP_LOAD, 2, 0, 0x18); // load into r0 0x18
 	loadInstructionIntoMemory(OP_LOAD, 2, 1, 0x18); // load into r1 0x18
-	loadInstructionIntoMemory(OP_ADD, 3, 0, 1, 0); // add r0 and r1 and store in r0 
+	loadInstructionIntoMemory(OP_ADD, 3, 0, 1, 0); // add r0 and r1 and store in r0
 
 	while (isCPURunning)
 	{
@@ -110,7 +117,7 @@ int main(int argc, char* argv[])
 
 	printf("Hit return to close...\n");
 	scanf_s("");
-
+	*/
 	return 0;
 }
 
