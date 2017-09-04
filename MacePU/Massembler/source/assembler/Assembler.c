@@ -66,10 +66,16 @@ AssemblerReturnCode assembleFile(const char * masmFileLoc)
 
 	while (!feof(pFile))
 	{
-		const int8* rtrn = fgets(instruction.instructionLineString, _countof(instruction.instructionLineString), pFile);
+		const int8* masmString = fgets(instruction.instructionLineString, _countof(instruction.instructionLineString), pFile);
 		instruction.instructionLineNumber = lineNumber;
-		if (rtrn != NULL)
+		
+		if (masmString != NULL)
 		{
+			if (strlen(masmString) <= 1)
+			{// if just a blank like skip
+				continue;
+			}
+
 			printf("%s\n", instruction.instructionLineString);
 			instruction.isLastInstruction = false;
 		}
@@ -308,6 +314,10 @@ static MASMParseError convertStringToOpcode(const InstructionLine* pinstLine, Pa
 	else if (strcmp(buffer, "add") == STRING_MATCH)
 	{
 		pParsedLine->opcode = OP_ADD;
+	}
+	else if (strcmp(buffer, "sub") == STRING_MATCH)
+	{
+		pParsedLine->opcode = OP_SUBTRACT;
 	}
 	else
 	{

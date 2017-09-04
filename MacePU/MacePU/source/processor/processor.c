@@ -160,7 +160,7 @@ void handleInstructionLine(int24 instrLine, Registers* regs, bool* isRunning)
 
 	case OP_NOP:
 		(*isRunning) = false;
-		break; 
+		break;
 
 	case OP_LOAD:
 		arg0 = getArg0(instrLine);
@@ -194,7 +194,19 @@ void handleInstructionLine(int24 instrLine, Registers* regs, bool* isRunning)
 		}
 
 		break;
+	case OP_SUBTRACT:
+		arg0 = getArg0(instrLine);
+		arg1 = getArg1(instrLine);
 
+		if (!isArg1Reg)
+		{
+			regs->gpr[arg0] -= arg1;
+		}
+		else
+		{
+			regs->gpr[arg0] -= regs->gpr[arg1];
+		}
+		break;
 	default: break;
 	}
 }

@@ -63,5 +63,4 @@ bool isValidInstructionLine(const InstructionLine* instructionLine, int8 argCoun
 int24 createInstructionInteger(ParsedLine* pParsedLIne);
 
 
-
 #endif //!ASSEMBLER_H

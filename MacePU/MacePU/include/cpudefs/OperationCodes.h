@@ -4,7 +4,8 @@
 #define OP_NOP 0x00 // no op
 #define OP_LOAD 0x01 // Register, Value
 #define OP_STORE 0x02 // Dest, Register
-#define OP_ADD 0x03 // A1, A2
+#define OP_ADD 0x03 // Dest, Source
+#define OP_SUBTRACT 0x4 //Dest, source
 
 #define ADDRESS_BUS_LENGTH_BITS 24
 #define ADDRESS_BUS_LENGTH_BYTES 3
