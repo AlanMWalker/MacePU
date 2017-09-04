@@ -142,21 +142,49 @@ void processorTick(Registers * regs)
 	++regs->programCounter;
 }
 
-void handleInstructionLine(int24 intsrLine, Registers* regs)
+void handleInstructionLine(int24 instrLine, Registers* regs)
 {
-	const int8 opcode = getOpcode(intsrLine);
+	const int8 opcode = getOpcode(instrLine);
+	const bool isArg1Reg = isArg1Register(instrLine);
+
 	int8 arg0 = 0, arg1 = 0;
 
 	switch (opcode)
 	{
-	case OP_LOAD:
-		arg0 = getArg0(intsrLine);
-		arg1 = getArg1(intsrLine);
 
-		regs->gpr[arg0] = arg1;
+	case OP_LOAD:
+		arg0 = getArg0(instrLine);
+		arg1 = getArg1(instrLine);
+		if (!isArg1Reg)
+		{
+
+			regs->gpr[arg0] = arg1;
+		}
+		else
+		{
+			regs->gpr[arg0] = regs->gpr[arg1];
+		}
+
 		break;
+
 	case OP_STORE:
 		break;
+
+	case OP_ADD:
+		arg0 = getArg0(instrLine);
+		arg1 = getArg1(instrLine);
+
+		if (!isArg1Reg)
+		{
+			regs->gpr[arg0] += arg1;
+		}
+		else
+		{
+			regs->gpr[arg0] += regs->gpr[arg1];
+		}
+		
+		break;
+
 	default: break;
 	}
 }
@@ -207,4 +235,11 @@ int8 getArg0(int24 intsrLine)
 int8 getArg1(int24 intsrLine)
 {
 	return (intsrLine.val & ARG1_MASK);
+}
+
+bool isArg1Register(int24 instrLine)
+{
+	int8 val = (instrLine.val & ARG1_INFO_MASK) >> IS_ARG1_REG_SHIFT;
+
+	return val != 0;
 }

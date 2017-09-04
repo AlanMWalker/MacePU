@@ -229,6 +229,11 @@ MASMParseError convertLineToInstruction(const InstructionLine* pInstructionLine)
 			{
 				parsedInstructionLine.arg1 = (int8)strtol(buffer, NULL, 16);
 			}
+			parsedInstructionLine.isArg1Register = false;
+		}
+		else
+		{
+			parsedInstructionLine.isArg1Register = true;
 		}
 	}
 	else // if there's not
@@ -242,7 +247,7 @@ MASMParseError convertLineToInstruction(const InstructionLine* pInstructionLine)
 	int16 indexInArray = programMemory.numberOfInstructions * ADDRESS_BUS_LENGTH_BYTES;
 	programMemory.instructionMemory[indexInArray] = (instruc.val & ARG1_MASK);
 	programMemory.instructionMemory[indexInArray + 1] = (instruc.val & ARG0_MASK) >> ARG0_SHIFT;
-	programMemory.instructionMemory[indexInArray + 2] = (instruc.val & OPCODE_MASK) >> OPCODE_SHIFT;
+	programMemory.instructionMemory[indexInArray + 2] = (instruc.val & OPCODE_AND_ARG_INFO_MASK) >> OPCODE_SHIFT;
 
 	//fwrite((void*)&instruc, 3, 1, pBinaryExecutable);
 
@@ -372,20 +377,23 @@ int24 createInstructionInteger(ParsedLine* pParsedLIne)
 	int24 instructionInt;
 	instructionInt.val = 0;
 	assert(pParsedLIne != NULL);
+
 	if (pParsedLIne == NULL)
 	{
 		instructionInt.val = INVALID_INSTRUCTION_LINE;
 		return instructionInt;
 	}
 
-	instructionInt.val |= pParsedLIne->opcode;
-	instructionInt.val = instructionInt.val << OPCODE_SHIFT;
+	if (pParsedLIne->isArg1Register)
+	{
+		instructionInt.val |= (1 << IS_ARG1_REG_SHIFT);
+	}
+	instructionInt.val |= (pParsedLIne->opcode << OPCODE_SHIFT);
 
 	switch (pParsedLIne->argCount)
 	{
 	case 1:
 	{
-		//const int8 arg = va_arg(list, int8);
 		instructionInt.val |= (pParsedLIne->arg0 << ARG0_SHIFT);
 		break;
 	}

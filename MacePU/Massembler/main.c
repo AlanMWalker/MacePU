@@ -77,33 +77,22 @@ int main(int32 argc, int8* argv[])
 		handleError("--DEBUG ERROR -- Incorrect file header when debug");
 		return -1;
 	}
-	
+
 	int16 numberOfInstructions = 0;
 	fread_s(&numberOfInstructions, sizeof(int16), sizeof(int16), 1, file);
 
-	for(int16 i = 0; i < numberOfInstructions; ++i)
+	for (int16 i = 0; i < numberOfInstructions; ++i)
 	{
-		memset(tempBuff, MEMSET_RESET, readBytes);
-
+		int24 readLine = { 0 };
 		fread_s(tempBuff, 20, 3, 1, file);
-
-		printf("Opcode = %d, Arg0 = %d, Arg1 = %d\n", tempBuff[2], tempBuff[1], tempBuff[0]);
-		int32 val = 0;
-
-		val |= (tempBuff[2] << OPCODE_SHIFT);
-		val |= (tempBuff[1] << ARG0_SHIFT);
-		val |= tempBuff[0];
-
-		printf("%d\n", val);
+		readLine.val |= (tempBuff[2] << OPCODE_SHIFT);
+		readLine.val |= (tempBuff[1] << ARG0_SHIFT);
+		readLine.val |= tempBuff[0];
+		printf("Read in line integer value is : %d\n", readLine.val);
 	}
-	if (file != NULL)
-	{
-		fclose(file);
-		file = NULL;
-	}
-
 #endif 
-	pauseForReturnKey();
 
+	pauseForReturnKey();
+	system("pause");
 	return 0;
 }

@@ -43,6 +43,7 @@ typedef struct _pinstrLine
 	int8 arg0;
 	int8 arg1;
 	int8 argCount;
+	bool isArg1Register;
 } ParsedLine;
 
 

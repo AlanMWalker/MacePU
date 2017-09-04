@@ -17,7 +17,7 @@ typedef struct _uint24
 
 typedef struct _int24
 {
-	signed int val : 24;
+	unsigned int val : 24;
 } int24;
 
 #endif // !DATA_TYPES_H

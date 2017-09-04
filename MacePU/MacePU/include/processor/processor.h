@@ -41,4 +41,6 @@ static int8 getArg0(int24 intsrLine);
 
 static int8 getArg1(int24 intsrLine);
 
+static bool isArg1Register(int24 instrLine);
+
 #endif // !PROCESSOR_H
