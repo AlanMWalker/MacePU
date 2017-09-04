@@ -143,7 +143,9 @@ MASMParseError convertLineToInstruction(const InstructionLine* pInstructionLine)
 	}
 
 	static int8 buffer[100];
+	memset(buffer, MEMSET_RESET, _countof(buffer));
 	const int32 StringLength = (signed)strlen(pInstructionLine->instructionLineString);
+
 	ParsedLine parsedInstructionLine = { 0 , 0 , 0, 0 };
 	int16 generatedInstruction = 0;
 	int8* commaPos = NULL;
@@ -180,7 +182,7 @@ MASMParseError convertLineToInstruction(const InstructionLine* pInstructionLine)
 
 		//TODO insert opcode arg validity check here!
 
-		memset(buffer, MEMSET_RESET, strlen(buffer)); // clear buffer
+		memset(buffer, MEMSET_RESET, strlen(buffer) + 1); // clear buffer
 													  //extract arg from instruction line string
 		int32 indexBuff = 0;
 		for (index; index < (signed)strlen(pInstructionLine->instructionLineString); ++index)
@@ -223,11 +225,11 @@ MASMParseError convertLineToInstruction(const InstructionLine* pInstructionLine)
 		{
 			if (buffer[0] == '0' && buffer[1] == 'x')
 			{
-				parsedInstructionLine.arg1 = atoi(buffer);
+				parsedInstructionLine.arg1 = (int8)strtol(buffer, NULL, 16);
 			}
 			else
 			{
-				parsedInstructionLine.arg1 = (int8)strtol(buffer, NULL, 16);
+				parsedInstructionLine.arg1 = atoi(buffer);
 			}
 			parsedInstructionLine.isArg1Register = false;
 		}
@@ -372,35 +374,35 @@ bool isValidInstructionLine(const InstructionLine* instructionLine, int8 argCoun
 	return true;
 }
 
-int24 createInstructionInteger(ParsedLine* pParsedLIne)
+int24 createInstructionInteger(ParsedLine* pParsedLine)
 {
 	int24 instructionInt;
 	instructionInt.val = 0;
-	assert(pParsedLIne != NULL);
+	assert(pParsedLine != NULL);
 
-	if (pParsedLIne == NULL)
+	if (pParsedLine == NULL)
 	{
 		instructionInt.val = INVALID_INSTRUCTION_LINE;
 		return instructionInt;
 	}
 
-	if (pParsedLIne->isArg1Register)
+	if (pParsedLine->isArg1Register)
 	{
 		instructionInt.val |= (1 << IS_ARG1_REG_SHIFT);
 	}
-	instructionInt.val |= (pParsedLIne->opcode << OPCODE_SHIFT);
+	instructionInt.val |= (pParsedLine->opcode << OPCODE_SHIFT);
 
-	switch (pParsedLIne->argCount)
+	switch (pParsedLine->argCount)
 	{
 	case 1:
 	{
-		instructionInt.val |= (pParsedLIne->arg0 << ARG0_SHIFT);
+		instructionInt.val |= (pParsedLine->arg0 << ARG0_SHIFT);
 		break;
 	}
 	case 2:
 	{
-		instructionInt.val |= (pParsedLIne->arg0 << ARG0_SHIFT);
-		instructionInt.val |= pParsedLIne->arg1;
+		instructionInt.val |= (pParsedLine->arg0 << ARG0_SHIFT);
+		instructionInt.val |= pParsedLine->arg1;
 		break;
 	}
 	default:

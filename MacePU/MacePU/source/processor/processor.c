@@ -13,6 +13,8 @@
 
 #define FREE_FILE(file) if(file != NULL){ fclose(file); }
 
+const double CLOCK_TIME_PER_TICK = 1.0 / 3.1258;
+
 ProcessorInitError initProcessor(int32 argc, int8* argv[])
 {
 	const int32 FilePathIndex = 1;
@@ -112,7 +114,7 @@ void runProcessor()
 		tSecsElapsed = (tEnd.QuadPart - tStart.QuadPart) / (double)tFreq.QuadPart;
 		double tMsElapsed = tSecsElapsed * 1000;
 
-		double tMsPerIteration = tMsElapsed;
+		//double tMsPerIteration = tMsElapsed;
 
 		printf("%lf ms\n", tMsElapsed);
 
@@ -121,8 +123,13 @@ void runProcessor()
 			printf("R%d value is: %d\n", i, cpuRegisters.gpr[i]);
 		}
 
-		Sleep(1000);
-		if (i >= tickCount)
+		const double SleepTime = (CLOCK_TIME_PER_TICK - tSecsElapsed) * 1000;
+		if (SleepTime >= 0.0)
+		{
+			Sleep((DWORD) SleepTime);
+		}
+
+		if (i >= tickCount) 
 		{
 			running = false;
 		}
@@ -182,7 +189,7 @@ void handleInstructionLine(int24 instrLine, Registers* regs)
 		{
 			regs->gpr[arg0] += regs->gpr[arg1];
 		}
-		
+
 		break;
 
 	default: break;
