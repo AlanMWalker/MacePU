@@ -31,9 +31,9 @@ bool isValidExecutableFileMarkers(FILE* pBinaryFile); // Are the headers and foo
 
 //static funcs
 
-static void processorTick(Registers* reg);
+static void processorTick(Registers* reg, bool* isRunning);
 
-static void handleInstructionLine(int24 intsrLine, Registers* regs);
+static void handleInstructionLine(int24 intsrLine, Registers* regs, bool* isRunning);
 
 static int8 getOpcode(int24 intsrLine);
 

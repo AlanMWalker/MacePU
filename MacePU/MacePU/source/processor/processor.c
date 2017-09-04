@@ -96,11 +96,11 @@ void runProcessor()
 		cpuRegisters.gpr[i] = 0;
 	}
 
-	bool running = true;
+	bool isRunning = true;
 	int32 tickCount = 5;
 	int32 i = 0;
 
-	while (running == true)
+	while (isRunning == true)
 	{
 		LARGE_INTEGER tStart, tEnd;
 		LARGE_INTEGER tFreq;
@@ -108,13 +108,11 @@ void runProcessor()
 		QueryPerformanceFrequency(&tFreq);
 		QueryPerformanceCounter(&tStart);
 
-		processorTick(&cpuRegisters);
+		processorTick(&cpuRegisters, &isRunning);
 
 		QueryPerformanceCounter(&tEnd);
 		tSecsElapsed = (tEnd.QuadPart - tStart.QuadPart) / (double)tFreq.QuadPart;
 		double tMsElapsed = tSecsElapsed * 1000;
-
-		//double tMsPerIteration = tMsElapsed;
 
 		printf("%lf ms\n", tMsElapsed);
 
@@ -126,12 +124,12 @@ void runProcessor()
 		const double SleepTime = (CLOCK_TIME_PER_TICK - tSecsElapsed) * 1000;
 		if (SleepTime >= 0.0)
 		{
-			Sleep((DWORD) SleepTime);
+			Sleep((DWORD)SleepTime);
 		}
 
-		if (i >= tickCount) 
+		if (i >= tickCount)
 		{
-			running = false;
+			isRunning = false;
 		}
 		++i;
 	}
@@ -142,14 +140,15 @@ void deinitProcessor()
 	deinitMemory();
 }
 
-void processorTick(Registers * regs)
+void processorTick(Registers * regs, bool* isRunning)
 {
 	int24 instrLine = getInstructionLine(regs->programCounter);
-	handleInstructionLine(instrLine, regs);
+
+	handleInstructionLine(instrLine, regs, isRunning);
 	++regs->programCounter;
 }
 
-void handleInstructionLine(int24 instrLine, Registers* regs)
+void handleInstructionLine(int24 instrLine, Registers* regs, bool* isRunning)
 {
 	const int8 opcode = getOpcode(instrLine);
 	const bool isArg1Reg = isArg1Register(instrLine);
@@ -158,6 +157,10 @@ void handleInstructionLine(int24 instrLine, Registers* regs)
 
 	switch (opcode)
 	{
+
+	case OP_NOP:
+		(*isRunning) = false;
+		break; 
 
 	case OP_LOAD:
 		arg0 = getArg0(instrLine);
