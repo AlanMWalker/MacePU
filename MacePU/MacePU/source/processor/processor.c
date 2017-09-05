@@ -97,8 +97,6 @@ void runProcessor()
 	}
 
 	bool isRunning = true;
-	int32 tickCount = 5;
-	int32 i = 0;
 
 	while (isRunning == true)
 	{
@@ -126,12 +124,6 @@ void runProcessor()
 		{
 			Sleep((DWORD)SleepTime);
 		}
-
-		if (i >= tickCount)
-		{
-			isRunning = false;
-		}
-		++i;
 	}
 }
 

@@ -56,11 +56,11 @@ typedef struct _instrMemory
 
 AssemblerReturnCode assembleFile(const char* masmFileLoc);
 
-bool isArgRegister(const int8* inBuffer);
+static bool isArgRegister(const int8* inBuffer);
 
-bool isValidInstructionLine(const InstructionLine* instructionLine, int8 argCount); // Is the instruction line syntactically correct
+static bool isValidInstructionLine(const InstructionLine* instructionLine, int8 argCount); // Is the instruction line syntactically correct
 
-int24 createInstructionInteger(ParsedLine* pParsedLIne);
+static int24 createInstructionInteger(ParsedLine* pParsedLIne);
 
 
 #endif //!ASSEMBLER_H

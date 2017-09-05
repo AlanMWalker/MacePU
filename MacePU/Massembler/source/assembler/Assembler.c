@@ -241,6 +241,9 @@ MASMParseError convertLineToInstruction(const InstructionLine* pInstructionLine)
 		}
 		else
 		{
+			const int8* rPos = strchr(buffer, 'r');
+			
+			parsedInstructionLine.arg1 = atoi(&rPos[1]);
 			parsedInstructionLine.isArg1Register = true;
 		}
 	}

@@ -1,7 +1,8 @@
 load r0, 20
 load r1, 5
-add r1, r0
+add r0, r1
 
+sub r0, r1
 sub r0, r1
 sub r0, r1
 sub r0, r1
